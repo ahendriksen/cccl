@@ -402,12 +402,12 @@ NV_IF_TARGET(NV_PROVIDES_SM_80,
         void consumer_wait()
         {
 NV_IF_TARGET(NV_PROVIDES_SM_80,
-            if (__head == __tail) {
-                return;
-            }
+            // if (__head == __tail) {
+            //     return;
+            // }
 
             const uint8_t __prior = __head - __tail - 1;
-            device::__pipeline_consumer_wait(*this, __prior);
+            device::__pipeline_consumer_wait(*this, 0);
             ++__tail;
 )
         }

@@ -620,7 +620,7 @@ struct __memcpy_async_impl<4, false> {
                 for (_CUDA_VSTD::size_t __offset = __rank * 4; __offset < __total_size; __offset += __stride * 4) {
                     asm volatile ("cp.async.ca.shared.global [%0], [%1], 4, 4;"
                         :: "r"(static_cast<_CUDA_VSTD::uint32_t>(__cvta_generic_to_shared(__destination + __offset))),
-                            "l"(__source + __offset)
+                            "l"(__cvta_generic_to_global(__source + __offset))
                         : "memory");
                 }
             )
@@ -727,7 +727,7 @@ async_contract_fulfillment inline __memcpy_async(
         NV_PROVIDES_SM_80,
 
         if (__isShared(__destination) && __isGlobal(__source)) {
-            if (_Native_alignment < 4) {
+            if (_Native_alignment < 4) { // could (should?) be if constexpr
                 auto __source_address = reinterpret_cast<_CUDA_VSTD::uintptr_t>(__source);
                 auto __destination_address = reinterpret_cast<_CUDA_VSTD::uintptr_t>(__destination);
 
