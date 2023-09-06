@@ -37,7 +37,7 @@ _LIBCUDACXX_BEGIN_NAMESPACE_CUDA_DEVICE_EXPERIMENTAL
 // - cp_async_bulk_wait_group_read<0, …, 7>
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_global_to_shared(void *__dest, const void *__src, _CUDA_VSTD::uint32_t __size, ::cuda::barrier<::cuda::thread_scope_block> &__bar)
 {
     NV_DISPATCH_TARGET(
@@ -61,7 +61,7 @@ void cp_async_bulk_global_to_shared(void *__dest, const void *__src, _CUDA_VSTD:
 
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_shared_to_global(void *__dest, const void * __src, _CUDA_VSTD::uint32_t __size)
 {
     NV_DISPATCH_TARGET(
@@ -83,7 +83,7 @@ void cp_async_bulk_shared_to_global(void *__dest, const void * __src, _CUDA_VSTD
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_tensor_1d_global_to_shared(
     void *__dest, const CUtensorMap *__tensor_map , int __c0, ::cuda::barrier<::cuda::thread_scope_block> &__bar)
 {
@@ -104,7 +104,7 @@ void cp_async_bulk_tensor_1d_global_to_shared(
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_tensor_2d_global_to_shared(
     void *__dest, const CUtensorMap *__tensor_map , int __c0, int __c1, ::cuda::barrier<::cuda::thread_scope_block> &__bar)
 {
@@ -126,7 +126,7 @@ void cp_async_bulk_tensor_2d_global_to_shared(
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_tensor_3d_global_to_shared(
     void *__dest, const CUtensorMap *__tensor_map, int __c0, int __c1, int __c2, ::cuda::barrier<::cuda::thread_scope_block> &__bar)
 {
@@ -149,7 +149,7 @@ void cp_async_bulk_tensor_3d_global_to_shared(
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_tensor_4d_global_to_shared(
     void *__dest, const CUtensorMap *__tensor_map , int __c0, int __c1, int __c2, int __c3, ::cuda::barrier<::cuda::thread_scope_block> &__bar)
 {
@@ -173,7 +173,7 @@ void cp_async_bulk_tensor_4d_global_to_shared(
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_tensor_5d_global_to_shared(
     void *__dest, const CUtensorMap *__tensor_map , int __c0, int __c1, int __c2, int __c3, int __c4, ::cuda::barrier<::cuda::thread_scope_block> &__bar)
 {
@@ -198,7 +198,7 @@ void cp_async_bulk_tensor_5d_global_to_shared(
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_tensor_1d_shared_to_global(
     const CUtensorMap *__tensor_map, int __c0, const void *__src)
 {
@@ -218,7 +218,7 @@ void cp_async_bulk_tensor_1d_shared_to_global(
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_tensor_2d_shared_to_global(
     const CUtensorMap *__tensor_map, int __c0, int __c1, const void *__src)
 {
@@ -239,7 +239,7 @@ void cp_async_bulk_tensor_2d_shared_to_global(
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_tensor_3d_shared_to_global(
     const CUtensorMap *__tensor_map, int __c0, int __c1, int __c2, const void *__src)
 {
@@ -261,7 +261,7 @@ void cp_async_bulk_tensor_3d_shared_to_global(
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_tensor_4d_shared_to_global(
     const CUtensorMap *__tensor_map, int __c0, int __c1, int __c2, int __c3, const void *__src)
 {
@@ -284,7 +284,7 @@ void cp_async_bulk_tensor_4d_shared_to_global(
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_tensor_5d_shared_to_global(
     const CUtensorMap *__tensor_map, int __c0, int __c1, int __c2, int __c3, int __c4, const void *__src)
 {
@@ -308,7 +308,7 @@ void cp_async_bulk_tensor_5d_shared_to_global(
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-membar
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void fence_proxy_async_shared_cta() {
     NV_DISPATCH_TARGET(
         NV_PROVIDES_SM_90, (
@@ -319,7 +319,7 @@ void fence_proxy_async_shared_cta() {
 }
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-commit-group
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_commit_group()
 {
     NV_DISPATCH_TARGET(
@@ -332,7 +332,7 @@ void cp_async_bulk_commit_group()
 
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-wait-group
 template <int n_prior>
-_LIBCUDACXX_DEVICE
+inline _LIBCUDACXX_DEVICE
 void cp_async_bulk_wait_group_read()
 {
   static_assert(n_prior <= 8, "cp_async_bulk_wait_group_read: waiting for more than 8 groups is not supported.");
