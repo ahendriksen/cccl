@@ -299,6 +299,7 @@ inline async_contract_fulfillment __strided_memcpy(_CUDA_VSTD::size_t __rank, _C
         memcpy(__out_ptr, __in_ptr, __size);
     }
     else {
+        #pragma unroll 32
         for (_CUDA_VSTD::size_t __offset = __rank * __alignment; __offset < __size; __offset += __group_size * __alignment) {
             memcpy(__out_ptr + __offset, __in_ptr + __offset, __alignment);
         }
