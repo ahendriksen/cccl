@@ -269,7 +269,6 @@ inline _LIBCUDACXX_DEVICE _CUDA_VSTD::uint64_t __as_b64(_Tp __val) {
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-arrive
 
 
-
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-arrive
 #if (defined(__CUDA_MINIMUM_ARCH__) && 900 <= __CUDA_MINIMUM_ARCH__) || (!defined(__CUDA_MINIMUM_ARCH__))
 template <dot_scope _Sco>
@@ -328,6 +327,138 @@ void mbarrier_arrive_expect_tx(sem_release_t __sem, scope_t<_Sco> __scope, space
 // mbarrier.test_wait/mbarrier.try_wait
 // mbarrier.try_wait requires sm_90 or higher.
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-test-wait-mbarrier-try-wait
+
+template <dot_scope _Sco>
+_LIBCUDACXX_DEVICE inline
+bool mbarrier_try_wait(sem_acquire_t __sem, scope_t<_Sco> __scope, space_shared_t __spc, _CUDA_VSTD::uint64_t* __addr, _CUDA_VSTD::uint64_t __state) {
+    static_assert(__scope == scope_cta || __scope == scope_cluster, "");
+
+    int __wait_complete;
+    if _LIBCUDACXX_CONSTEXPR_AFTER_CXX14 (__scope == scope_cta) {
+        asm (
+            "{\n\t"
+            ".reg .pred p;\n\t"
+            "mbarrier.try_wait.acquire.cta.shared::cta.b64 p, [%1], %2;\n\t"
+            "selp.b32 %0, 1, 0, p;\n\t"
+            "}"
+            : "=r"(__wait_complete)
+            : "r"(__as_smem_ptr(__addr)),
+              "l"(__state)
+            : "memory");
+    } else {
+        asm (
+            "{\n\t"
+            ".reg .pred p;\n\t"
+            "mbarrier.try_wait.acquire.cluster.shared::cta.b64 p, [%1], %2;\n\t"
+            "selp.b32 %0, 1, 0, p;\n\t"
+            "}"
+            : "=r"(__wait_complete)
+            : "r"(__as_smem_ptr(__addr)),
+              "l"(__state)
+            : "memory");
+    }
+    return __wait_complete;
+}
+
+template <dot_scope _Sco>
+_LIBCUDACXX_DEVICE inline
+bool mbarrier_try_wait(sem_acquire_t __sem, scope_t<_Sco> __scope, space_shared_t __spc, _CUDA_VSTD::uint64_t* __addr, _CUDA_VSTD::uint64_t __state, _CUDA_VSTD::uint32_t __suspend_time_hint) {
+    static_assert(__scope == scope_cta || __scope == scope_cluster, "");
+
+    int __wait_complete;
+    if _LIBCUDACXX_CONSTEXPR_AFTER_CXX14 (__scope == scope_cta) {
+        asm (
+            "{\n\t"
+            ".reg .pred p;\n\t"
+            "mbarrier.try_wait.acquire.cta.shared::cta.b64 p, [%1], %2, %3;\n\t"
+            "selp.b32 %0, 1, 0, p;\n\t"
+            "}"
+            : "=r"(__wait_complete)
+            : "r"(__as_smem_ptr(__addr)),
+              "l"(__state),
+              "r"(__suspend_time_hint)
+            : "memory");
+    } else {
+        asm (
+            "{\n\t"
+            ".reg .pred p;\n\t"
+            "mbarrier.try_wait.acquire.cluster.shared::cta.b64 p, [%1], %2, %3;\n\t"
+            "selp.b32 %0, 1, 0, p;\n\t"
+            "}"
+            : "=r"(__wait_complete)
+            : "r"(__as_smem_ptr(__addr)),
+              "l"(__state),
+              "r"(__suspend_time_hint)
+            : "memory");
+    }
+    return __wait_complete;
+}
+
+template <dot_scope _Sco>
+_LIBCUDACXX_DEVICE inline
+bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_shared_t __spc, _CUDA_VSTD::uint64_t* __addr, bool __phase_parity) {
+    static_assert(__scope == scope_cta || __scope == scope_cluster, "");
+
+    int __wait_complete;
+    if _LIBCUDACXX_CONSTEXPR_AFTER_CXX14 (__scope == scope_cta) {
+        asm (
+            "{\n\t"
+            ".reg .pred p;\n\t"
+            "mbarrier.try_wait.acquire.cta.parity.shared::cta.b64 p, [%1], %2;\n\t"
+            "selp.b32 %0, 1, 0, p;\n\t"
+            "}"
+            : "=r"(__wait_complete)
+            : "r"(__as_smem_ptr(__addr)),
+              "r"(static_cast<int>(__phase_parity))
+            : "memory");
+    } else {
+        asm (
+            "{\n\t"
+            ".reg .pred p;\n\t"
+            "mbarrier.try_wait.acquire.cluster.parity.shared::cta.b64 p, [%1], %2;\n\t"
+            "selp.b32 %0, 1, 0, p;\n\t"
+            "}"
+            : "=r"(__wait_complete)
+            : "r"(__as_smem_ptr(__addr)),
+              "r"(static_cast<int>(__phase_parity))
+            : "memory");
+    }
+    return __wait_complete;
+}
+
+template <dot_scope _Sco>
+_LIBCUDACXX_DEVICE inline
+bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_shared_t __spc, _CUDA_VSTD::uint64_t* __addr, bool __phase_parity, _CUDA_VSTD::uint32_t __suspend_time_hint) {
+    static_assert(__scope == scope_cta || __scope == scope_cluster, "");
+
+    int __wait_complete;
+    if _LIBCUDACXX_CONSTEXPR_AFTER_CXX14 (__scope == scope_cta) {
+        asm (
+            "{\n\t"
+            ".reg .pred p;\n\t"
+            "mbarrier.try_wait.acquire.cta.parity.shared::cta.b64 p, [%1], %2, %3;\n\t"
+            "selp.b32 %0, 1, 0, p;\n\t"
+            "}"
+            : "=r"(__wait_complete)
+            : "r"(__as_smem_ptr(__addr)),
+              "r"(static_cast<int>(__phase_parity)),
+              "r"(__suspend_time_hint)
+            : "memory");
+    } else {
+        asm (
+            "{\n\t"
+            ".reg .pred p;\n\t"
+            "mbarrier.try_wait.acquire.cluster.parity.shared::cta.b64 p, [%1], %2, %3;\n\t"
+            "selp.b32 %0, 1, 0, p;\n\t"
+            "}"
+            : "=r"(__wait_complete)
+            : "r"(__as_smem_ptr(__addr)),
+              "r"(static_cast<int>(__phase_parity)),
+              "r"(__suspend_time_hint)
+            : "memory");
+    }
+    return __wait_complete;
+}
 
 
 /*
