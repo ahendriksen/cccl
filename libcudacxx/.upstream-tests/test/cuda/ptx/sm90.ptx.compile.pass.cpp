@@ -49,6 +49,33 @@ int main(int, char**)
             cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cluster, space_shared, &bar, false);
             cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cta, space_shared, &bar, false, 1);
             cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cluster, space_shared, &bar, false, 1);
+
+            // st.async b32
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, 1, &bar);
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1}, &bar);
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1, 2}, &bar);
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1, 2, 3, 4}, &bar);
+
+            // st.async b64
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, 1ul, &bar);
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1ul}, &bar);
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1ul, 2ul}, &bar);
+            // The below variant does not exist: (v4.b64)
+            // cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1ul, 2ul, 3ul, 4ul}, &bar);
+
+            // st.async f32
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, 1.f, &bar);
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1.f}, &bar);
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1.f, 2.f}, &bar);
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1.f, 2.f, 3.f, 4.f}, &bar);
+
+            // st.async f64
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, 1., &bar);
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1.}, &bar);
+            cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1., 2.}, &bar);
+            // The below variant does not exist: (v4.b64)
+            // cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1., 2., 3., 4.}, &bar);
+
         }
     ));
 

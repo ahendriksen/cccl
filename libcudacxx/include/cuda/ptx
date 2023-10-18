@@ -490,6 +490,75 @@ bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_
 // st.async
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-st-async
 
+template <typename _Tp, int __n = 1>
+_LIBCUDACXX_DEVICE inline
+void st_async(sem_weak_t __sem, space_shared_cluster_t __spc, void * __dest, const _Tp (& __val)[__n], _CUDA_VSTD::uint64_t * __mbar) {
+    static_assert(sizeof(_Tp) == 4 || sizeof(_Tp) == 8, "st_async only supports 4 and 8-byte wide types.");
+    static_assert(__n == 1 || __n == 2 || __n == 4,     "st_async only supports v1, v2, or v4 vector widths.");
+    static_assert(!(sizeof(_Tp) == 8 && __n == 4),      "st_async does not support v4 variant with 8-byte wide types.");
+
+    if constexpr (sizeof(_Tp) == 4) {
+        if constexpr (__n == 1) {
+            asm (
+                "st.async.weak.shared::cluster.mbarrier::complete_tx::bytes.b32 [%0], %2, [%1];"
+                :
+                : "r"(__as_remote_dsmem_ptr(__dest)),
+                  "r"(__as_remote_dsmem_ptr(__mbar)), // Order of operands flipped to allow easier vectorization
+                  "r"(__as_b32(__val[0]))     // in the code below.
+                : "memory");
+        } else if constexpr (__n == 2) {
+            asm (
+                "st.async.weak.shared::cluster.mbarrier::complete_tx::bytes.v2.b32 [%0], {%2, %3}, [%1];"
+                :
+                : "r"(__as_remote_dsmem_ptr(__dest)),
+                  "r"(__as_remote_dsmem_ptr(__mbar)),
+                  "r"(__as_b32(__val[0])),
+                  "r"(__as_b32(__val[1]))
+                : "memory");
+        } else {
+            asm (
+                "st.async.weak.shared::cluster.mbarrier::complete_tx::bytes.v4.b32 [%0], {%2, %3, %4, %5}, [%1];"
+                :
+                : "r"(__as_remote_dsmem_ptr(__dest)),
+                  "r"(__as_remote_dsmem_ptr(__mbar)),
+                  "r"(__as_b32(__val[0])),
+                  "r"(__as_b32(__val[1])),
+                  "r"(__as_b32(__val[2])),
+                  "r"(__as_b32(__val[3]))
+                : "memory");
+        }
+    } else {
+        // .b64
+        if constexpr (__n == 1) {
+            asm (
+                "st.async.weak.shared::cluster.mbarrier::complete_tx::bytes.b64 [%0], %2, [%1];"
+                :
+                : "r"(__as_remote_dsmem_ptr(__dest)),
+                  "r"(__as_remote_dsmem_ptr(__mbar)), // Order of operands flipped to allow easier vectorization
+                  "l"(__as_b64(__val[0]))     // in the code below.
+                : "memory");
+        } else if constexpr (__n == 2) {
+            asm (
+                "st.async.weak.shared::cluster.mbarrier::complete_tx::bytes.v2.b64 [%0], {%2, %3}, [%1];"
+                :
+                : "r"(__as_remote_dsmem_ptr(__dest)),
+                  "r"(__as_remote_dsmem_ptr(__mbar)),
+                  "l"(__as_b64(__val[0])),
+                  "l"(__as_b64(__val[1]))
+                : "memory");
+        } else {
+            // The st.async.v4.b64 variant does not exist.
+        }
+    }
+}
+
+template <typename _Tp>
+__device__
+void st_async(sem_weak_t __sem, space_shared_cluster_t __spc, void * __dest, _Tp __val, uint64_t * mbar) {
+    st_async(__sem, __spc, __dest, {__val}, mbar);
+}
+
+
 // red.async
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-red-async
 
