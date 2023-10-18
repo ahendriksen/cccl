@@ -23,29 +23,30 @@
 int main(int, char**)
 {
     NV_IF_TARGET(NV_IS_DEVICE, (
+        using cuda::ptx::sem_release;
+        using cuda::ptx::sem_acquire;
+        using cuda::ptx::sem_weak;
+        using cuda::ptx::space_shared_cluster;
+        using cuda::ptx::space_shared;
+        using cuda::ptx::scope_cluster;
+        using cuda::ptx::scope_cta;
+
+        __shared__ uint64_t bar;
+
         // Do not execute. Just check if below PTX compiles (that is: assembles) without error.
-        if (false) {
-            using cuda::ptx::sem_release;
-            using cuda::ptx::sem_acquire;
-            using cuda::ptx::sem_weak;
-            using cuda::ptx::space_shared_cluster;
-            using cuda::ptx::space_shared;
-            using cuda::ptx::scope_cluster;
-            using cuda::ptx::scope_cta;
+        if (threadIdx.x > 1024) {
+            // cuda::ptx::mbarrier_arrive_expect_tx(sem_release, scope_cta, space_shared, &bar, 1);
+            // cuda::ptx::mbarrier_arrive_expect_tx(sem_release, scope_cluster, space_shared, &bar, 1);
 
-            __shared__ uint64_t bar;
-            cuda::ptx::mbarrier_arrive_expect_tx(sem_release, scope_cta, space_shared, &bar, 1);
-            cuda::ptx::mbarrier_arrive_expect_tx(sem_release, scope_cluster, space_shared, &bar, 1);
-
-            cuda::ptx::mbarrier_arrive_expect_tx(sem_release, scope_cta, space_shared_cluster, &bar, 1);
-            cuda::ptx::mbarrier_arrive_expect_tx(sem_release, scope_cluster, space_shared_cluster, &bar, 1);
-
-            cuda::ptx::mbarrier_try_wait(sem_acquire, scope_cta, space_shared, &bar, 1);
-            cuda::ptx::mbarrier_try_wait(sem_acquire, scope_cluster, space_shared, &bar, 1);
-            cuda::ptx::mbarrier_try_wait(sem_acquire, scope_cta, space_shared, &bar, 1, 1);
-            cuda::ptx::mbarrier_try_wait(sem_acquire, scope_cluster, space_shared, &bar, 1, 1);
-
-            cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cta, space_shared, &bar, false);
+            // cuda::ptx::mbarrier_arrive_expect_tx(sem_release, scope_cta, space_shared_cluster, &bar, 1);
+            // cuda::ptx::mbarrier_arrive_expect_tx(sem_release, scope_cluster, space_shared_cluster, &bar, 1);
+        } else if (threadIdx.x > 1025) {
+            // cuda::ptx::mbarrier_try_wait(sem_acquire, scope_cta, space_shared, &bar, 1);
+            cuda::ptx::mbarrier_try_wait(sem_acquire, scope_cluster, space_shared, &bar, 0);
+            // cuda::ptx::mbarrier_try_wait(sem_acquire, scope_cta, space_shared, &bar, 1, 1);
+            // cuda::ptx::mbarrier_try_wait(sem_acquire, scope_cluster, space_shared, &bar, 1, 1);
+        } else if (threadIdx.x > 1026) {
+            cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cta, space_shared, &bar, 0);
             cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cluster, space_shared, &bar, false);
             cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cta, space_shared, &bar, false, 1);
             cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cluster, space_shared, &bar, false, 1);

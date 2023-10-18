@@ -400,8 +400,10 @@ bool mbarrier_try_wait(sem_acquire_t __sem, scope_t<_Sco> __scope, space_shared_
 
 template <dot_scope _Sco>
 _LIBCUDACXX_DEVICE inline
-bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_shared_t __spc, _CUDA_VSTD::uint64_t* __addr, bool __phase_parity) {
+bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_shared_t __spc, _CUDA_VSTD::uint64_t* __addr, _CUDA_VSTD::uint32_t __phase_parity) {
     static_assert(__scope == scope_cta || __scope == scope_cluster, "");
+
+    (void) static_cast<int>(__phase_parity);
 
     int __wait_complete;
     if _LIBCUDACXX_CONSTEXPR_AFTER_CXX14 (__scope == scope_cta) {
@@ -413,7 +415,7 @@ bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_
             "}"
             : "=r"(__wait_complete)
             : "r"(__as_smem_ptr(__addr)),
-              "r"(static_cast<int>(__phase_parity))
+              "r"(__phase_parity)
             : "memory");
     } else {
         asm (
@@ -424,7 +426,7 @@ bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_
             "}"
             : "=r"(__wait_complete)
             : "r"(__as_smem_ptr(__addr)),
-              "r"(static_cast<int>(__phase_parity))
+              "r"(__phase_parity)
             : "memory");
     }
     return __wait_complete;
@@ -432,7 +434,7 @@ bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_
 
 template <dot_scope _Sco>
 _LIBCUDACXX_DEVICE inline
-bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_shared_t __spc, _CUDA_VSTD::uint64_t* __addr, bool __phase_parity, _CUDA_VSTD::uint32_t __suspend_time_hint) {
+bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_shared_t __spc, _CUDA_VSTD::uint64_t* __addr, _CUDA_VSTD::uint32_t __phase_parity, _CUDA_VSTD::uint32_t __suspend_time_hint) {
     static_assert(__scope == scope_cta || __scope == scope_cluster, "");
 
     int __wait_complete;
@@ -445,7 +447,7 @@ bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_
             "}"
             : "=r"(__wait_complete)
             : "r"(__as_smem_ptr(__addr)),
-              "r"(static_cast<int>(__phase_parity)),
+              "r"(__phase_parity),
               "r"(__suspend_time_hint)
             : "memory");
     } else {
@@ -457,7 +459,7 @@ bool mbarrier_try_wait_parity(sem_acquire_t __sem, scope_t<_Sco> __scope, space_
             "}"
             : "=r"(__wait_complete)
             : "r"(__as_smem_ptr(__addr)),
-              "r"(static_cast<int>(__phase_parity)),
+              "r"(__phase_parity),
               "r"(__suspend_time_hint)
             : "memory");
     }
