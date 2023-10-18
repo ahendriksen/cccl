@@ -241,6 +241,27 @@ void cp_async_bulk_commit_group() {
 
 // cp.async.bulk.wait_group
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-wait-group
+template <int __n_prior>
+inline _LIBCUDACXX_DEVICE
+void cp_async_bulk_wait_group()
+{
+    static_assert(__n_prior <= 63, "cp_async_bulk_wait_group_read: waiting for more than 63 groups is not supported.");
+    asm volatile("cp.async.bulk.wait_group %0;"
+                 :
+                 : "n"(__n_prior)
+                 : "memory");
+}
+
+template <int __n_prior>
+inline _LIBCUDACXX_DEVICE
+void cp_async_bulk_wait_group_read()
+{
+    static_assert(__n_prior <= 63, "cp_async_bulk_wait_group_read: waiting for more than 63 groups is not supported.");
+    asm volatile("cp.async.bulk.wait_group.read %0;"
+                 :
+                 : "n"(__n_prior)
+                 : "memory");
+}
 
 
 // Lower priority:

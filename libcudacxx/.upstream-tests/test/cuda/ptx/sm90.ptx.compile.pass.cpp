@@ -50,8 +50,14 @@ int main(int, char**)
             cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cluster, space_shared, &bar, false);
             cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cta, space_shared, &bar, false, 1);
             cuda::ptx::mbarrier_try_wait_parity(sem_acquire, scope_cluster, space_shared, &bar, false, 1);
-
+        } else {
             cuda::ptx::cp_async_bulk_commit_group();
+
+            cuda::ptx::cp_async_bulk_wait_group<0>();
+            cuda::ptx::cp_async_bulk_wait_group<63>();
+
+            cuda::ptx::cp_async_bulk_wait_group_read<0>();
+            cuda::ptx::cp_async_bulk_wait_group_read<63>();
 
             // st.async b32
             cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, 1, &bar);
@@ -78,7 +84,6 @@ int main(int, char**)
             cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1., 2.}, &bar);
             // The below variant does not exist: (v4.b64)
             // cuda::ptx::st_async(sem_weak, space_shared_cluster, nullptr, {1., 2., 3., 4.}, &bar);
-
         }
     ));
 
