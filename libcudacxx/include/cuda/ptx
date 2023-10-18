@@ -234,6 +234,10 @@ inline _LIBCUDACXX_DEVICE _CUDA_VSTD::uint64_t __as_b64(_Tp __val) {
 
 // cp.async.bulk.commit_group
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-commit-group
+inline _LIBCUDACXX_DEVICE
+void cp_async_bulk_commit_group() {
+    asm ("cp.async.bulk.commit_group;" :::"memory");
+}
 
 // cp.async.bulk.wait_group
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-wait-group
