@@ -145,6 +145,26 @@ enum class dot_scope {
     sys
 };
 
+/*
+// Reduction ops:
+.add
+
+.dec
+.inc
+
+.max
+.min
+
+.and
+.or
+.xor
+
+// Atom:
+.cas
+.exch
+
+ *  */
+
 template <dot_sem sem>
 using sem_t = _CUDA_VSTD::integral_constant<dot_sem, sem>;
 using sem_acq_rel_t = sem_t<dot_sem::acq_rel>;
