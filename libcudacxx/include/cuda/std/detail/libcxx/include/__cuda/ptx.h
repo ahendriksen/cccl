@@ -374,6 +374,56 @@ _LIBCUDACXX_BEGIN_NAMESPACE_CUDA_PTX
 // 9.7.8.12. Data Movement and Conversion Instructions: st.async
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-st-async
 
+/*
+// st.async.weak.shared::cluster.mbarrier::complete_tx::bytes{.type} [addr], value, [remote_bar]; // PTX ISA 81, SM_90
+// .type      = { .b32, .b64 }
+
+template <typename Type>
+__device__ static inline void st_async(
+  cuda::ptx::space_shared_cluster_t,
+  void* addr,
+  const Type& value,
+  uint64_t* remote_bar);
+*/
+#if __cccl_ptx_isa >= 810
+extern "C" __device__ void __void__cuda_ptx_st_async_is_not_supported_before_SM_90__();
+template <typename _Type>
+_LIBCUDACXX_DEVICE static inline void st_async(
+  space_shared_cluster_t,
+  _Type* __addr,
+  const _Type& __value,
+  _CUDA_VSTD::uint64_t* __remote_bar)
+{
+  // __space == space_shared_cluster (due to parameter type constraint)
+  static_assert(sizeof(_Type) == 4 || sizeof(_Type) == 8, "");
+
+  NV_IF_ELSE_TARGET(NV_PROVIDES_SM_90,(
+    if _LIBCUDACXX_CONSTEXPR_AFTER_CXX14 (sizeof(_Type) == 4) {
+      asm (
+        "st.async.weak.shared::cluster.mbarrier::complete_tx::bytes.b32 [%0], %1, [%2];"
+        :
+        : "r"(__as_ptr_remote_dsmem(__addr)),
+          "r"(__as_b32(__value)),
+          "r"(__as_ptr_remote_dsmem(__remote_bar))
+        : "memory"
+      );
+    } else if _LIBCUDACXX_CONSTEXPR_AFTER_CXX14 (sizeof(_Type) == 8) {
+        asm (
+          "st.async.weak.shared::cluster.mbarrier::complete_tx::bytes.b64 [%0], %1, [%2];"
+          :
+          : "r"(__as_ptr_remote_dsmem(__addr)),
+            "l"(__as_b64(__value)),
+            "r"(__as_ptr_remote_dsmem(__remote_bar))
+          : "memory"
+      );
+    }
+  ),(
+    // Unsupported architectures will have a linker error with a semi-decent error message
+    return __void__cuda_ptx_st_async_is_not_supported_before_SM_90__();
+  ));
+}
+#endif // __cccl_ptx_isa >= 810
+
 // 9.7.8.13. Data Movement and Conversion Instructions: multimem.ld_reduce, multimem.st, multimem.red
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-multimem-ld-reduce-multimem-st-multimem-red
 
@@ -425,6 +475,138 @@ _LIBCUDACXX_BEGIN_NAMESPACE_CUDA_PTX
 
 // 9.7.8.24.6. Data Movement and Conversion Instructions: cp.async.bulk
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk
+
+/*
+// cp.async.bulk.shared::cluster.global.mbarrier::complete_tx::bytes [dstMem], [srcMem], size, [smem_bar]; // 1.  PTX ISA 80, SM_90
+template <typename=void>
+__device__ static inline void cp_async_bulk(
+  cuda::ptx::space_shared_cluster_t,
+  cuda::ptx::space_global_t,
+  void* dstMem,
+  void* srcMem,
+  const uint32_t& size,
+  uint64_t* smem_bar);
+*/
+#if __cccl_ptx_isa >= 800
+extern "C" __device__ void __void__cuda_ptx_cp_async_bulk_is_not_supported_before_SM_90__();
+template <typename=void>
+_LIBCUDACXX_DEVICE static inline void cp_async_bulk(
+  space_shared_cluster_t,
+  space_global_t,
+  void* __dstMem,
+  void* __srcMem,
+  const _CUDA_VSTD::uint32_t& __size,
+  _CUDA_VSTD::uint64_t* __smem_bar)
+{
+  // __dst == space_shared_cluster (due to parameter type constraint)
+  // __src == space_global (due to parameter type constraint)
+
+
+
+  NV_IF_ELSE_TARGET(NV_PROVIDES_SM_90,(
+    asm (
+      "cp.async.bulk.shared::cluster.global.mbarrier::complete_tx::bytes [%0], [%1], %2, [%3]; // 1. "
+      :
+      : "r"(__as_ptr_smem(__dstMem)),
+        "l"(__as_ptr_gmem(__srcMem)),
+        "r"(__size),
+        "r"(__as_ptr_smem(__smem_bar))
+      : "memory"
+    );
+
+  ),(
+    // Unsupported architectures will have a linker error with a semi-decent error message
+    return __void__cuda_ptx_cp_async_bulk_is_not_supported_before_SM_90__();
+  ));
+}
+#endif // __cccl_ptx_isa >= 800
+
+/*
+// cp.async.bulk.shared::cluster.shared.mbarrier::complete_tx::bytes [dstMem], [srcMem], size, [smem_bar]; // 2.  PTX ISA 80, SM_90
+template <typename=void>
+__device__ static inline void cp_async_bulk(
+  cuda::ptx::space_shared_cluster_t,
+  cuda::ptx::space_shared_t,
+  void* dstMem,
+  void* srcMem,
+  const uint32_t& size,
+  uint64_t* smem_bar);
+*/
+#if __cccl_ptx_isa >= 800
+extern "C" __device__ void __void__cuda_ptx_cp_async_bulk_is_not_supported_before_SM_90__();
+template <typename=void>
+_LIBCUDACXX_DEVICE static inline void cp_async_bulk(
+  space_shared_cluster_t,
+  space_shared_t,
+  void* __dstMem,
+  void* __srcMem,
+  const _CUDA_VSTD::uint32_t& __size,
+  _CUDA_VSTD::uint64_t* __smem_bar)
+{
+  // __dst == space_shared_cluster (due to parameter type constraint)
+  // __src == space_shared (due to parameter type constraint)
+
+
+
+  NV_IF_ELSE_TARGET(NV_PROVIDES_SM_90,(
+    asm (
+      "cp.async.bulk.shared::cluster.shared.mbarrier::complete_tx::bytes [%0], [%1], %2, [%3]; // 2. "
+      :
+      : "r"(__as_ptr_smem(__dstMem)),
+        "l"(__as_ptr_gmem(__srcMem)),
+        "r"(__size),
+        "r"(__as_ptr_smem(__smem_bar))
+      : "memory"
+    );
+
+  ),(
+    // Unsupported architectures will have a linker error with a semi-decent error message
+    return __void__cuda_ptx_cp_async_bulk_is_not_supported_before_SM_90__();
+  ));
+}
+#endif // __cccl_ptx_isa >= 800
+
+/*
+// cp.async.bulk.global.shared.bulk_group [dstMem], [srcMem], size; // 3.  PTX ISA 80, SM_90
+template <typename=void>
+__device__ static inline void cp_async_bulk(
+  cuda::ptx::space_global_t,
+  cuda::ptx::space_shared_t,
+  void* dstMem,
+  void* srcMem,
+  const uint32_t& size);
+*/
+#if __cccl_ptx_isa >= 800
+extern "C" __device__ void __void__cuda_ptx_cp_async_bulk_is_not_supported_before_SM_90__();
+template <typename=void>
+_LIBCUDACXX_DEVICE static inline void cp_async_bulk(
+  space_global_t,
+  space_shared_t,
+  void* __dstMem,
+  void* __srcMem,
+  const _CUDA_VSTD::uint32_t& __size)
+{
+  // __dst == space_global (due to parameter type constraint)
+  // __src == space_shared (due to parameter type constraint)
+
+
+
+  NV_IF_ELSE_TARGET(NV_PROVIDES_SM_90,(
+    asm (
+      "cp.async.bulk.global.shared.bulk_group [%0], [%1], %2; // 3. "
+      :
+      : "r"(__as_ptr_smem(__dstMem)),
+        "l"(__as_ptr_gmem(__srcMem)),
+        "r"(__size)
+      : "memory"
+    );
+
+  ),(
+    // Unsupported architectures will have a linker error with a semi-decent error message
+    return __void__cuda_ptx_cp_async_bulk_is_not_supported_before_SM_90__();
+  ));
+}
+#endif // __cccl_ptx_isa >= 800
 
 // 9.7.8.24.7. Data Movement and Conversion Instructions: cp.reduce.async.bulk
 // https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-reduce-async-bulk

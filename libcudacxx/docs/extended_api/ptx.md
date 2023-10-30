@@ -286,7 +286,7 @@ notes](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#release
 [`ld.global.nc`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-ld-global-nc
 [`ldu`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-ldu
 [`st`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-st
-[`st.async`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-st-async
+[`st.async`]: #stasync
 [`multimem.ld_reduce, multimem.st, multimem.red`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-multimem-ld-reduce-multimem-st-multimem-red
 [`prefetch, prefetchu`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-prefetch-prefetchu
 [`applypriority`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-applypriority
@@ -299,6 +299,21 @@ notes](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#release
 [`mapa`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-mapa
 [`getctarank`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-getctarank
 
+#### `st.async`
+
+- PTX ISA: [`st.async`](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-st-async)
+
+```cuda
+// st.async.weak.shared::cluster.mbarrier::complete_tx::bytes{.type} [addr], value, [remote_bar]; // PTX ISA 81, SM_90
+// .type      = { .b32, .b64 }
+
+template <typename Type>
+__device__ static inline void st_async(
+  cuda::ptx::space_shared_cluster_t,
+  void* addr,
+  const Type& value,
+  uint64_t* remote_bar);
+```
 ### [9.7.8.24. Data Movement and Conversion Instructions: Asynchronous copy](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-asynchronous-copy)
 
 | Instruction                              | Available in libcu++ |
@@ -319,7 +334,7 @@ notes](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#release
 [`cp.async`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async
 [`cp.async.commit_group`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-commit-group
 [`cp.async.wait_group / cp.async.wait_all`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-wait-group-cp-async-wait-all
-[`cp.async.bulk`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk
+[`cp.async.bulk`]: #cpasyncbulk
 [`cp.reduce.async.bulk`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-reduce-async-bulk
 [`cp.async.bulk.prefetch`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-prefetch
 [`cp.async.bulk.tensor`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-tensor
@@ -328,6 +343,41 @@ notes](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#release
 [`cp.async.bulk.commit_group`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-commit-group
 [`cp.async.bulk.wait_group`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk-wait-group
 [`tensormap.replace`]: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-tensormap-replace
+
+#### `cp.async.bulk`
+
+- PTX ISA: [`cp.async.bulk`](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#data-movement-and-conversion-instructions-cp-async-bulk)
+
+```cuda
+// cp.async.bulk.shared::cluster.global.mbarrier::complete_tx::bytes [dstMem], [srcMem], size, [smem_bar]; // 1.  PTX ISA 80, SM_90
+template <typename=void>
+__device__ static inline void cp_async_bulk(
+  cuda::ptx::space_shared_cluster_t,
+  cuda::ptx::space_global_t,
+  void* dstMem,
+  void* srcMem,
+  const uint32_t& size,
+  uint64_t* smem_bar);
+
+// cp.async.bulk.shared::cluster.shared.mbarrier::complete_tx::bytes [dstMem], [srcMem], size, [smem_bar]; // 2.  PTX ISA 80, SM_90
+template <typename=void>
+__device__ static inline void cp_async_bulk(
+  cuda::ptx::space_shared_cluster_t,
+  cuda::ptx::space_shared_t,
+  void* dstMem,
+  void* srcMem,
+  const uint32_t& size,
+  uint64_t* smem_bar);
+
+// cp.async.bulk.global.shared.bulk_group [dstMem], [srcMem], size; // 3.  PTX ISA 80, SM_90
+template <typename=void>
+__device__ static inline void cp_async_bulk(
+  cuda::ptx::space_global_t,
+  cuda::ptx::space_shared_t,
+  void* dstMem,
+  void* srcMem,
+  const uint32_t& size);
+```
 
 ### [9.7.9. Texture Instructions](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#texture-instructions)
 
@@ -440,7 +490,7 @@ notes](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#release
 
 #### `mbarrier.arrive`
 
--  PTX ISA: [mbarrier.arrive](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-arrive)
+- PTX ISA: [`mbarrier.arrive`](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#parallel-synchronization-and-communication-instructions-mbarrier-arrive)
 
  
 ```cuda
