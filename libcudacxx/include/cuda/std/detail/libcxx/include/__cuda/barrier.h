@@ -572,10 +572,10 @@ inline _CUDA_VSTD::uint64_t * barrier_native_handle(barrier<thread_scope_block> 
 
 #if defined(_CCCL_CUDA_COMPILER)
 
-// Hide arrive_tx when CUDA architecture is insufficient. Note the
+// Hide arrive_tx when CUDA architecture or PTX ISA is insufficient. Note the
 // (!defined(__CUDA_MINIMUM_ARCH__)). This is required to make sure the function
 // does not get removed by cudafe, which does not define __CUDA_MINIMUM_ARCH__.
-#if (defined(__CUDA_MINIMUM_ARCH__) && 900 <= __CUDA_MINIMUM_ARCH__) || (!defined(__CUDA_MINIMUM_ARCH__))
+#if (__libcuda_ptx_isa >= 800 && defined(__CUDA_MINIMUM_ARCH__) && 900 <= __CUDA_MINIMUM_ARCH__) || (!defined(__CUDA_MINIMUM_ARCH__))
 
 _LIBCUDACXX_NODISCARD_ATTRIBUTE _LIBCUDACXX_DEVICE inline
 barrier<thread_scope_block>::arrival_token barrier_arrive_tx(
@@ -929,7 +929,7 @@ struct __memcpy_completion_impl {
  * 5. normal synchronous copy (fallback)
  ***********************************************************************/
 
-#if (defined(__CUDA_MINIMUM_ARCH__) && 900 <= __CUDA_MINIMUM_ARCH__) || (!defined(__CUDA_MINIMUM_ARCH__))
+#if (__libcuda_ptx_isa >= 800 && defined(__CUDA_MINIMUM_ARCH__) && 900 <= __CUDA_MINIMUM_ARCH__) || (!defined(__CUDA_MINIMUM_ARCH__))
 template <typename _Group>
 inline __device__
 void __cp_async_bulk_shared_global(const _Group &__g, char * __dest, const char * __src, size_t __size, uint64_t *__bar_handle) {
@@ -1083,6 +1083,8 @@ __completion_mechanism __dispatch_memcpy_async_any_to_any(_Group const & __group
 template<_CUDA_VSTD::size_t _Align, typename _Group>
 _LIBCUDACXX_NODISCARD_ATTRIBUTE _LIBCUDACXX_DEVICE inline
 __completion_mechanism __dispatch_memcpy_async_global_to_shared(_Group const & __group, char * __dest_char, char const * __src_char, _CUDA_VSTD::size_t __size, uint32_t __allowed_completions, uint64_t* __bar_handle) {
+    // cp.async.bulk is supported from PTX ISA 8.0 and up.
+#if __libcuda_ptx_isa >= 800
     NV_IF_TARGET(NV_PROVIDES_SM_90, (
         const bool __can_use_complete_tx = __allowed_completions & uint32_t(__completion_mechanism::__mbarrier_complete_tx);
         _LIBCUDACXX_DEBUG_ASSERT(__can_use_complete_tx == (nullptr != __bar_handle), "Pass non-null bar_handle if and only if can_use_complete_tx.");
@@ -1094,6 +1096,7 @@ __completion_mechanism __dispatch_memcpy_async_global_to_shared(_Group const & _
         }
         // Fallthrough to SM 80..
     ));
+#endif
 
     NV_IF_TARGET(NV_PROVIDES_SM_80, (
         if _LIBCUDACXX_CONSTEXPR_AFTER_CXX14 (_Align >= 4) {
