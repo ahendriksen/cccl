@@ -1372,6 +1372,42 @@ _LIBCUDACXX_DEVICE bool __atomic_compare_exchange_cuda(volatile _Type *__ptr, _T
     memcpy(__expected, &__old, 4);
     return __ret;
 }
+
+template<class _Type, _CUDA_VSTD::__enable_if_t<sizeof(_Type)==4, int> = 0>
+_LIBCUDACXX_DEVICE bool __atomic_compare_exchange_cuda(_Type *__ptr, _Type *__expected, const _Type *__desired, bool, int __success_memorder, int __failure_memorder, __thread_scope_device_tag) {
+    uint32_t __tmp = 0, __old = 0, __old_tmp;
+    memcpy(&__tmp, __desired, 4);
+    memcpy(&__old, __expected, 4);
+    __old_tmp = __old;
+    NV_DISPATCH_TARGET(
+      NV_PROVIDES_SM_70, (
+        switch (__stronger_order_cuda(__success_memorder, __failure_memorder)) {
+          case __ATOMIC_SEQ_CST: __cuda_fence_sc_device();
+          case __ATOMIC_CONSUME:
+          case __ATOMIC_ACQUIRE: __cuda_compare_exchange_acquire_32_device(__ptr, __old, __old_tmp, __tmp); break;
+          case __ATOMIC_ACQ_REL: __cuda_compare_exchange_acq_rel_32_device(__ptr, __old, __old_tmp, __tmp); break;
+          case __ATOMIC_RELEASE: __cuda_compare_exchange_release_32_device(__ptr, __old, __old_tmp, __tmp); break;
+          case __ATOMIC_RELAXED: __cuda_compare_exchange_relaxed_32_device(__ptr, __old, __old_tmp, __tmp); break;
+          default: assert(0);
+        }
+      ),
+      NV_IS_DEVICE, (
+        switch (__stronger_order_cuda(__success_memorder, __failure_memorder)) {
+          case __ATOMIC_SEQ_CST:
+          case __ATOMIC_ACQ_REL: __cuda_membar_device();
+          case __ATOMIC_CONSUME:
+          case __ATOMIC_ACQUIRE: __cuda_compare_exchange_volatile_32_device(__ptr, __old, __old_tmp, __tmp); __cuda_membar_device(); break;
+          case __ATOMIC_RELEASE: __cuda_membar_device(); __cuda_compare_exchange_volatile_32_device(__ptr, __old, __old_tmp, __tmp); break;
+          case __ATOMIC_RELAXED: __cuda_compare_exchange_volatile_32_device(__ptr, __old, __old_tmp, __tmp); break;
+          default: assert(0);
+        }
+      )
+    )
+    bool const __ret = __old == __old_tmp;
+    memcpy(__expected, &__old, 4);
+    return __ret;
+}
+
 template<class _CUDA_A, class _CUDA_B, class _CUDA_C> static inline _LIBCUDACXX_DEVICE void __cuda_exchange_acq_rel_32_device(_CUDA_A __ptr, _CUDA_B& __dst, _CUDA_C __op) { asm volatile("atom.exch.acq_rel.gpu.b32 %0,[%1],%2;" : "=r"(__dst) : "l"(__ptr),"r"(__op) : "memory"); }
 template<class _CUDA_A, class _CUDA_B, class _CUDA_C> static inline _LIBCUDACXX_DEVICE void __cuda_exchange_acquire_32_device(_CUDA_A __ptr, _CUDA_B& __dst, _CUDA_C __op) { asm volatile("atom.exch.acquire.gpu.b32 %0,[%1],%2;" : "=r"(__dst) : "l"(__ptr),"r"(__op) : "memory"); }
 template<class _CUDA_A, class _CUDA_B, class _CUDA_C> static inline _LIBCUDACXX_DEVICE void __cuda_exchange_relaxed_32_device(_CUDA_A __ptr, _CUDA_B& __dst, _CUDA_C __op) { asm volatile("atom.exch.relaxed.gpu.b32 %0,[%1],%2;" : "=r"(__dst) : "l"(__ptr),"r"(__op) : "memory"); }

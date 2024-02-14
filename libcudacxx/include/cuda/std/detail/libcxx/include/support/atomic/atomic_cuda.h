@@ -257,6 +257,26 @@ _LIBCUDACXX_HOST_DEVICE
 
 template <typename _Tp, int _Sco, bool _Ref>
 _LIBCUDACXX_HOST_DEVICE
+ bool __cxx_atomic_compare_exchange_strong(__cxx_atomic_base_heterogeneous_impl<_Tp, _Sco, _Ref>* __a, _Tp* __expected, _Tp __val, memory_order __success, memory_order __failure) {
+    // Both aref and atomic pass through here.
+// static_assert(sizeof(_Tp) == 0);
+    alignas(_Tp) auto __tmp = *__expected;
+    bool __result = false;
+    NV_DISPATCH_TARGET(
+        NV_IS_DEVICE, (
+            alignas(_Tp) auto __tmp_v = __val;
+            __result = __atomic_compare_exchange_cuda(__cxx_get_underlying_device_atomic(__a), &__tmp, &__tmp_v, false, static_cast<__memory_order_underlying_t>(__success), static_cast<__memory_order_underlying_t>(__failure), __scope_tag<_Sco>());
+        ),
+        NV_IS_HOST, (
+            __result = __host::__cxx_atomic_compare_exchange_strong(&__a->__a_value, &__tmp, __val, __success, __failure);
+        )
+    )
+    *__expected = __tmp;
+    return __result;
+}
+
+template <typename _Tp, int _Sco, bool _Ref>
+_LIBCUDACXX_HOST_DEVICE
  bool __cxx_atomic_compare_exchange_weak(__cxx_atomic_base_heterogeneous_impl<_Tp, _Sco, _Ref> volatile* __a, _Tp* __expected, _Tp __val, memory_order __success, memory_order __failure) {
     alignas(_Tp) auto __tmp = *__expected;
     bool __result = false;
