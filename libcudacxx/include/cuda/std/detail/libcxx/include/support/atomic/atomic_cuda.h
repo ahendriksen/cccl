@@ -112,9 +112,16 @@ _Tp* __cxx_get_underlying_device_atomic(__cxx_atomic_base_heterogeneous_impl<_Tp
 }
 
 template <typename _Tp, int _Sco, bool _Ref>
-_LIBCUDACXX_INLINE_VISIBILITY constexpr
+_LIBCUDACXX_INLINE_VISIBILITY
 volatile _Tp* __cxx_get_underlying_device_atomic(__cxx_atomic_base_heterogeneous_impl<_Tp, _Sco, _Ref> volatile* __a) noexcept {
-  return __cxx_get_underlying_atomic(&__a->__a_value);
+  // static_assert(sizeof(_Tp) == 0);
+  asm volatile("// before get underlying atomic ref = %0" :: "r"(int(_Ref)): "memory");
+  auto deref = &__a->__a_value; // __host::__cxx_atomic_ref_base_impl
+  asm volatile("// deref get underlying atomic ref = %0" :: "l"(deref): "memory");
+
+  auto ret= __cxx_get_underlying_atomic(deref);
+  asm volatile("// After get underlying atomic" ::: "memory");
+  return ret;
 }
 
 template <typename _Tp, int _Sco, bool _Ref>
@@ -231,6 +238,8 @@ _LIBCUDACXX_HOST_DEVICE
 template <typename _Tp, int _Sco, bool _Ref>
 _LIBCUDACXX_HOST_DEVICE
  bool __cxx_atomic_compare_exchange_strong(__cxx_atomic_base_heterogeneous_impl<_Tp, _Sco, _Ref> volatile* __a, _Tp* __expected, _Tp __val, memory_order __success, memory_order __failure) {
+    // Both aref and atomic pass through here.
+// static_assert(sizeof(_Tp) == 0);
     alignas(_Tp) auto __tmp = *__expected;
     bool __result = false;
     NV_DISPATCH_TARGET(

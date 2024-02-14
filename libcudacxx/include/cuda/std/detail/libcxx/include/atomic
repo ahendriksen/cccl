@@ -1405,6 +1405,7 @@ struct __atomic_base_core : public __atomic_base_storage<_Tp, _Storage>{
     bool compare_exchange_strong(_Tp& __e, _Tp __d,
                                  memory_order __m = memory_order_seq_cst) noexcept {
         if (memory_order_acq_rel == __m)
+            // Atomic goes through this path
             return __cxx_atomic_compare_exchange_strong(&this->__a_, &__e, __d, __m, memory_order_acquire);
         else if (memory_order_release == __m)
             return __cxx_atomic_compare_exchange_strong(&this->__a_, &__e, __d, __m, memory_order_relaxed);
@@ -1529,12 +1530,19 @@ struct __atomic_base_core<_Tp, true, _Storage> : public __atomic_base_storage<_T
     _LIBCUDACXX_INLINE_VISIBILITY
     bool compare_exchange_strong(_Tp& __e, _Tp __d,
                                  memory_order __m = memory_order_seq_cst) const noexcept {
-        if (memory_order_acq_rel == __m)
+            // Atomic_ref goes through this path.
+            asm volatile("// split compare_exchange_strong before":::"memory");
+
+      if (memory_order_acq_rel == __m){
             return __cxx_atomic_compare_exchange_strong(&this->__a_, &__e, __d, __m, memory_order_acquire);
+
+      }
         else if (memory_order_release == __m)
             return __cxx_atomic_compare_exchange_strong(&this->__a_, &__e, __d, __m, memory_order_relaxed);
         else
             return __cxx_atomic_compare_exchange_strong(&this->__a_, &__e, __d, __m, __m);
+
+            asm volatile("// split compare_exchange_strong after":::"memory");
     }
 
     _LIBCUDACXX_INLINE_VISIBILITY void wait(_Tp __v, memory_order __m = memory_order_seq_cst) const volatile noexcept

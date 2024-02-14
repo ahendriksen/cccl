@@ -43,9 +43,12 @@ _Tp* __cxx_get_underlying_atomic(__cxx_atomic_base_impl<_Tp, _Sco> * __a) noexce
   return &__a->__a_value;
 }
 template <typename _Tp, int _Sco>
-_LIBCUDACXX_INLINE_VISIBILITY constexpr
+_LIBCUDACXX_INLINE_VISIBILITY
 volatile _Tp* __cxx_get_underlying_atomic(__cxx_atomic_base_impl<_Tp, _Sco> volatile* __a) noexcept {
-  return &__a->__a_value;
+  // static_assert(sizeof(_Tp) == 0);
+  asm volatile("// Inside get underlying atomic (non-ref base_impl)" ::: "memory");
+
+  return &__a->__a_value; // Because it does not actually dereference, this does not generate an ld.local (atomic path)
 }
 template <typename _Tp, int _Sco>
 _LIBCUDACXX_INLINE_VISIBILITY constexpr
@@ -109,9 +112,12 @@ _Tp* __cxx_get_underlying_atomic(__cxx_atomic_ref_base_impl<_Tp, _Sco>* __a) noe
   return __a->__a_value;
 }
 template <typename _Tp, int _Sco>
-_LIBCUDACXX_INLINE_VISIBILITY constexpr
+_LIBCUDACXX_INLINE_VISIBILITY
 volatile _Tp* __cxx_get_underlying_atomic(__cxx_atomic_ref_base_impl<_Tp, _Sco> volatile* __a) noexcept {
-  return __a->__a_value;
+  asm volatile("// Inside get underlying atomic (1)" ::: "memory");
+  auto deref = __a->__a_value; // <-- this deref loads from local, i.e. ld.local (atomic_ref path)
+  asm volatile("// Inside get underlying atomic (2)" ::: "memory");
+  return deref;
 }
 template <typename _Tp, int _Sco>
 _LIBCUDACXX_INLINE_VISIBILITY constexpr

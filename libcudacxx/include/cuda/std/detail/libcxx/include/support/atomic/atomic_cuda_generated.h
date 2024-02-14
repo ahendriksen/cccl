@@ -1332,7 +1332,10 @@ _LIBCUDACXX_DEVICE void __atomic_store_cuda(volatile _Type *__ptr, _Type *__val,
 }
 template<class _CUDA_A, class _CUDA_B, class _CUDA_C, class _CUDA_D> static inline _LIBCUDACXX_DEVICE void __cuda_compare_exchange_acq_rel_32_device(_CUDA_A __ptr, _CUDA_B& __dst, _CUDA_C __cmp, _CUDA_D __op) { asm volatile("atom.cas.acq_rel.gpu.b32 %0,[%1],%2,%3;" : "=r"(__dst) : "l"(__ptr),"r"(__cmp),"r"(__op) : "memory"); }
 template<class _CUDA_A, class _CUDA_B, class _CUDA_C, class _CUDA_D> static inline _LIBCUDACXX_DEVICE void __cuda_compare_exchange_acquire_32_device(_CUDA_A __ptr, _CUDA_B& __dst, _CUDA_C __cmp, _CUDA_D __op) { asm volatile("atom.cas.acquire.gpu.b32 %0,[%1],%2,%3;" : "=r"(__dst) : "l"(__ptr),"r"(__cmp),"r"(__op) : "memory"); }
-template<class _CUDA_A, class _CUDA_B, class _CUDA_C, class _CUDA_D> static inline _LIBCUDACXX_DEVICE void __cuda_compare_exchange_relaxed_32_device(_CUDA_A __ptr, _CUDA_B& __dst, _CUDA_C __cmp, _CUDA_D __op) { asm volatile("atom.cas.relaxed.gpu.b32 %0,[%1],%2,%3;" : "=r"(__dst) : "l"(__ptr),"r"(__cmp),"r"(__op) : "memory"); }
+template<class _CUDA_A, class _CUDA_B, class _CUDA_C, class _CUDA_D> static inline _LIBCUDACXX_DEVICE void __cuda_compare_exchange_relaxed_32_device(_CUDA_A __ptr, _CUDA_B& __dst, _CUDA_C __cmp, _CUDA_D __op) {
+    // static_assert(sizeof(_CUDA_C) != 4);
+    asm volatile("atom.cas.relaxed.gpu.b32 %0,[%1],%2,%3;" : "=r"(__dst) : "l"(__ptr),"r"(__cmp),"r"(__op) : "memory");
+}
 template<class _CUDA_A, class _CUDA_B, class _CUDA_C, class _CUDA_D> static inline _LIBCUDACXX_DEVICE void __cuda_compare_exchange_release_32_device(_CUDA_A __ptr, _CUDA_B& __dst, _CUDA_C __cmp, _CUDA_D __op) { asm volatile("atom.cas.release.gpu.b32 %0,[%1],%2,%3;" : "=r"(__dst) : "l"(__ptr),"r"(__cmp),"r"(__op) : "memory"); }
 template<class _CUDA_A, class _CUDA_B, class _CUDA_C, class _CUDA_D> static inline _LIBCUDACXX_DEVICE void __cuda_compare_exchange_volatile_32_device(_CUDA_A __ptr, _CUDA_B& __dst, _CUDA_C __cmp, _CUDA_D __op) { asm volatile("atom.cas.gpu.b32 %0,[%1],%2,%3;" : "=r"(__dst) : "l"(__ptr),"r"(__cmp),"r"(__op) : "memory"); }
 template<class _Type, _CUDA_VSTD::__enable_if_t<sizeof(_Type)==4, int> = 0>
