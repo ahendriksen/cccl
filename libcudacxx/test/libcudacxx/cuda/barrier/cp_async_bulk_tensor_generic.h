@@ -217,6 +217,8 @@ CUtensorMap map_encode(T *tensor_ptr, const cuda::std::array<uint64_t, num_dims>
     // The stride is the number of bytes to traverse from the first element of one row to the next.
     // It must be a multiple of 16.
     constexpr int num_strides = num_dims - 1;
+    [[maybe_unused]] cuuint64_t dummy_globalstrides = 1;
+
     cuda::std::array<uint64_t, num_strides> stride;
     uint64_t base_stride = sizeof(T);
     for (size_t i = 0; i < stride.size(); ++i) {
@@ -241,7 +243,7 @@ CUtensorMap map_encode(T *tensor_ptr, const cuda::std::array<uint64_t, num_dims>
         num_dims,                   // cuuint32_t tensorRank,
         tensor_ptr,                 // void *globalAddress,
         gmem_dims.data(),           // const cuuint64_t *globalDim,
-        stride.data(),              // const cuuint64_t *globalStrides,
+        num_strides == 0 ? &dummy_globalstrides : stride.data(),              // const cuuint64_t *globalStrides,
         smem_dims.data(),           // const cuuint32_t *boxDim,
         elem_stride.data(),         // const cuuint32_t *elementStrides,
         CUtensorMapInterleave::CU_TENSOR_MAP_INTERLEAVE_NONE,
